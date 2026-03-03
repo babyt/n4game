@@ -644,6 +644,10 @@
         <div class="game-over-modal">
             <h3>🎉 游戏结束！</h3>
             <div class="winner" id="winnerText">获胜者</div>
+            <div id="computerSecretDisplay" style="display: none; margin-bottom: 15px;">
+                <p style="color: #718096; font-size: 0.9rem; margin-bottom: 8px;">电脑预设的数字：</p>
+                <div style="font-size: 2rem; font-weight: bold; color: #e53e3e; letter-spacing: 8px; background: #fff5f5; padding: 10px 20px; border-radius: 8px; display: inline-block;" id="computerSecretNumber">----</div>
+            </div>
             <p style="color: #718096; margin-bottom: 20px;" id="gameOverInfo"></p>
             <button class="btn btn-new-game" id="btnPlayAgain">再来一局</button>
         </div>
@@ -725,6 +729,8 @@
             modalSecretNumber: document.getElementById('modalSecretNumber'),
             winnerText: document.getElementById('winnerText'),
             gameOverInfo: document.getElementById('gameOverInfo'),
+            computerSecretDisplay: document.getElementById('computerSecretDisplay'),
+            computerSecretNumber: document.getElementById('computerSecretNumber'),
             btnCloseModal: document.getElementById('btnCloseModal'),
             btnPlayAgain: document.getElementById('btnPlayAgain'),
             btnStartGame: document.getElementById('btnStartGame'),
@@ -984,6 +990,8 @@
             if (winner === 'A') {
                 elements.winnerText.textContent = '🎉 恭喜您获胜！';
                 elements.winnerText.className = 'winner';
+                // 玩家获胜时隐藏电脑数字显示
+                elements.computerSecretDisplay.style.display = 'none';
             } else {
                 if (isCheating) {
                     elements.winnerText.textContent = '🤖 电脑获胜！（您看牌作弊）';
@@ -991,6 +999,9 @@
                     elements.winnerText.textContent = '🤖 电脑获胜！';
                 }
                 elements.winnerText.className = 'winner computer-wins';
+                // 电脑获胜时显示电脑预设的数字
+                elements.computerSecretDisplay.style.display = 'block';
+                elements.computerSecretNumber.textContent = gameState.computerSecret;
             }
             elements.gameOverInfo.textContent = `游戏共进行了 ${gameState.currentRound} 轮`;
             elements.modalGameOver.classList.add('active');
