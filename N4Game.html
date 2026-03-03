@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人机猜数字游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 800px;
+            height: 95vh;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .header .status {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .game-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .players-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .player-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+
+        .player-section:last-child {
+            border-right: none;
+        }
+
+        .player-header {
+            background: #f7fafc;
+            padding: 12px;
+            text-align: center;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .player-header h2 {
+            font-size: 1.1rem;
+            color: #4a5568;
+        }
+
+        .player-header .label {
+            font-size: 0.8rem;
+            color: #718096;
+        }
+
+        .history-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background: #fafbfc;
+        }
+
+        .history-item {
+            background: white;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #cbd5e0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .history-item.player-a {
+            border-left-color: #48bb78;
+        }
+
+        .history-item.player-b {
+            border-left-color: #4299e1;
+        }
+
+        .history-item .round {
+            font-size: 0.75rem;
+            color: #718096;
+            white-space: nowrap;
+        }
+
+        .history-item .guess {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #2d3748;
+            letter-spacing: 3px;
+        }
+
+        .history-item .result {
+            font-size: 0.85rem;
+            color: #e53e3e;
+            white-space: nowrap;
+        }
+
+        .history-item.correct {
+            border-left-color: #38a169;
+            background: #c6f6d5;
+        }
+
+        .history-item .result span {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .controls {
+            background: #f7fafc;
+            padding: 15px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .buttons-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-new-game {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+
+        .btn-new-game:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-show-card {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+        }
+
+        .btn-show-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(237, 137, 54, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-help {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+        }
+
+        .btn-help:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
+        }
+
+        /* 帮助模态框 */
+        .help-modal {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            max-width: 500px;
+            width: 90%;
+            text-align: left;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .help-modal h3 {
+            font-size: 1.3rem;
+            color: #2d3748;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .help-modal .rules {
+            font-size: 0.9rem;
+            color: #4a5568;
+            line-height: 1.8;
+        }
+
+        .help-modal .rules h4 {
+            color: #2d3748;
+            font-size: 1rem;
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+
+        .help-modal .rules h4:first-child {
+            margin-top: 0;
+        }
+
+        .help-modal .rules ul {
+            margin-left: 20px;
+        }
+
+        .help-modal .rules li {
+            margin-bottom: 5px;
+        }
+
+        .help-modal .btn-close-help {
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-label {
+            font-size: 0.9rem;
+            color: #4a5568;
+            white-space: nowrap;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .digit-input {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .digit-input:focus {
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.3);
+        }
+
+        .digit-input:disabled {
+            background: #edf2f7;
+            color: #a0aec0;
+        }
+
+        /* 模态框 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal h3 {
+            font-size: 1.3rem;
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+
+        .modal .secret-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #e53e3e;
+            letter-spacing: 10px;
+            background: #fff5f5;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .modal .btn-close {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        /* 游戏结束模态框 */
+        .game-over-modal {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .game-over-modal h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .game-over-modal .winner {
+            font-size: 1.2rem;
+            color: #38a169;
+            margin-bottom: 20px;
+        }
+
+        .game-over-modal .winner.computer-wins {
+            color: #e53e3e;
+        }
+
+        /* 设置数字模态框 */
+        .setup-modal {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .setup-modal h3 {
+            font-size: 1.3rem;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .setup-modal .description {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .setup-modal .input-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .setup-modal .digit-input {
+            width: 60px;
+            height: 60px;
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .setup-modal .digit-input:focus {
+            border-color: #48bb78;
+            box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.3);
+        }
+
+        .setup-modal .btn-start {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 12px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .setup-modal .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+
+        .setup-modal .btn-start:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .setup-modal .error-msg {
+            color: #e53e3e;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            min-height: 20px;
+        }
+
+        /* 玩家数字显示 */
+        .player-secret {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 8px;
+            display: inline-block;
+            letter-spacing: 4px;
+            font-weight: bold;
+        }
+
+        /* PC端样式 */
+        @media (min-width: 601px) {
+            .game-container {
+                height: 90vh;
+                max-height: 700px;
+            }
+
+            .players-container {
+                flex-direction: row;
+            }
+
+            .digit-input {
+                width: 60px;
+                height: 60px;
+                font-size: 1.8rem;
+            }
+        }
+
+        /* 移动端样式 */
+        @media (max-width: 600px) {
+            .game-container {
+                height: 95vh;
+                border-radius: 0;
+            }
+
+            .header h1 {
+                font-size: 1.2rem;
+            }
+
+            .players-container {
+                flex-direction: row;
+            }
+
+            .player-header {
+                padding: 8px;
+            }
+
+            .player-header h2 {
+                font-size: 1rem;
+            }
+
+            .history-item {
+                padding: 8px 10px;
+            }
+
+            .history-item .guess {
+                font-size: 1rem;
+                letter-spacing: 2px;
+            }
+
+            .btn {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+
+            .digit-input {
+                width: 45px;
+                height: 45px;
+                font-size: 1.3rem;
+            }
+
+            .controls {
+                padding: 10px;
+            }
+
+            .input-label {
+                font-size: 0.8rem;
+            }
+        }
+
+        /* 提示信息 */
+        .hint {
+            text-align: center;
+            padding: 10px;
+            color: #718096;
+            font-size: 0.85rem;
+        }
+
+        .current-turn {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #ebf8ff;
+            color: #2b6cb0;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        .current-turn.computer {
+            background: #faf5ff;
+            color: #6b46c1;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🎯 人机猜数字游戏</h1>
+            <div class="status" id="gameStatus">点击"开新局"开始游戏</div>
+        </div>
+
+        <div class="game-area">
+            <div class="players-container">
+                <div class="player-section">
+                    <div class="player-header">
+                        <h2>👤 A（玩家）</h2>
+                        <div class="label">您的猜测记录</div>
+                        <div class="player-secret" id="playerSecretDisplay" style="display: none;">----</div>
+                        <div class="current-turn" id="turnA" style="display: none;">当前回合</div>
+                    </div>
+                    <div class="history-container" id="historyA">
+                        <div class="hint">游戏开始后显示猜测记录</div>
+                    </div>
+                </div>
+                <div class="player-section">
+                    <div class="player-header">
+                        <h2>🤖 B（电脑）</h2>
+                        <div class="label">电脑的猜测记录</div>
+                        <div class="current-turn computer" id="turnB" style="display: none;">当前回合</div>
+                    </div>
+                    <div class="history-container" id="historyB">
+                        <div class="hint">游戏开始后显示猜测记录</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="buttons-container">
+                    <button class="btn btn-new-game" id="btnNewGame">🎮 开新局</button>
+                    <button class="btn btn-help" id="btnHelp">❓ 帮助</button>
+                    <button class="btn btn-show-card" id="btnShowCard" disabled>👁️ 我要看牌</button>
+                </div>
+                <div class="input-container">
+                    <span class="input-label">输入猜测：</span>
+                    <div class="input-group">
+                        <input type="text" class="digit-input" id="input1" maxlength="1" disabled>
+                        <input type="text" class="digit-input" id="input2" maxlength="1" disabled>
+                        <input type="text" class="digit-input" id="input3" maxlength="1" disabled>
+                        <input type="text" class="digit-input" id="input4" maxlength="1" disabled>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 看牌模态框 -->
+    <div class="modal-overlay" id="modalShowCard">
+        <div class="modal">
+            <h3>🤖 电脑的数字</h3>
+            <div class="secret-number" id="modalSecretNumber">----</div>
+            <p style="color: #718096; margin-bottom: 15px;">游戏将继续进行</p>
+            <button class="btn-close" id="btnCloseModal">知道了</button>
+        </div>
+    </div>
+
+    <!-- 游戏结束模态框 -->
+    <div class="modal-overlay" id="modalGameOver">
+        <div class="game-over-modal">
+            <h3>🎉 游戏结束！</h3>
+            <div class="winner" id="winnerText">获胜者</div>
+            <p style="color: #718096; margin-bottom: 20px;" id="gameOverInfo"></p>
+            <button class="btn btn-new-game" id="btnPlayAgain">再来一局</button>
+        </div>
+    </div>
+
+    <!-- 设置数字模态框 -->
+    <div class="modal-overlay" id="modalSetup">
+        <div class="setup-modal">
+            <h3>🎮 新游戏设置</h3>
+            <p class="description">请输入您想让电脑猜测的4位数字（每位1-9）</p>
+            <div class="input-group">
+                <input type="text" class="digit-input" id="setupInput1" maxlength="1">
+                <input type="text" class="digit-input" id="setupInput2" maxlength="1">
+                <input type="text" class="digit-input" id="setupInput3" maxlength="1">
+                <input type="text" class="digit-input" id="setupInput4" maxlength="1">
+            </div>
+            <div class="error-msg" id="setupError"></div>
+            <button class="btn-start" id="btnStartGame" disabled>开始游戏</button>
+        </div>
+    </div>
+
+    <!-- 帮助模态框 -->
+    <div class="modal-overlay" id="modalHelp">
+        <div class="help-modal">
+            <h3>❓ 游戏规则</h3>
+            <div class="rules">
+                <h4>游戏简介</h4>
+                <p>这是一个双人对战猜数字游戏，玩家A与电脑B各自设定一个4位数字让对方猜测。</p>
+                
+                <h4>游戏流程</h4>
+                <ul>
+                    <li>点击"开新局"按钮开始新游戏</li>
+                    <li>玩家A输入一个4位数字（每位1-9）作为电脑需要猜测的目标</li>
+                    <li>电脑也会随机生成一个4位数字作为玩家A需要猜测的目标</li>
+                    <li>玩家A和电脑B轮流猜测对方的数字</li>
+                    <li>每次猜测后会显示猜中了几个数字（位置和数字都正确）</li>
+                    <li>先猜中全部4个数字的一方获胜</li>
+                </ul>
+            </div>
+            <button class="btn-close-help" id="btnCloseHelp">知道了</button>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        const gameState = {
+            isPlaying: false,
+            playerSecret: '',      // 玩家A的数字
+            computerSecret: '',    // 电脑B的数字
+            currentRound: 0,
+            currentTurn: 'A',      // 'A' 或 'B'
+            playerGuesses: [],     // 玩家的猜测历史
+            computerGuesses: [],   // 电脑的猜测历史
+            computerPossibleNumbers: [], // 电脑可能的数字集合
+            gameWinner: null
+        };
+
+        // DOM 元素
+        const elements = {
+            btnNewGame: document.getElementById('btnNewGame'),
+            btnShowCard: document.getElementById('btnShowCard'),
+            btnHelp: document.getElementById('btnHelp'),
+            inputs: [
+                document.getElementById('input1'),
+                document.getElementById('input2'),
+                document.getElementById('input3'),
+                document.getElementById('input4')
+            ],
+            historyA: document.getElementById('historyA'),
+            historyB: document.getElementById('historyB'),
+            gameStatus: document.getElementById('gameStatus'),
+            turnA: document.getElementById('turnA'),
+            turnB: document.getElementById('turnB'),
+            playerSecretDisplay: document.getElementById('playerSecretDisplay'),
+            modalShowCard: document.getElementById('modalShowCard'),
+            modalGameOver: document.getElementById('modalGameOver'),
+            modalSetup: document.getElementById('modalSetup'),
+            modalHelp: document.getElementById('modalHelp'),
+            modalSecretNumber: document.getElementById('modalSecretNumber'),
+            winnerText: document.getElementById('winnerText'),
+            gameOverInfo: document.getElementById('gameOverInfo'),
+            btnCloseModal: document.getElementById('btnCloseModal'),
+            btnPlayAgain: document.getElementById('btnPlayAgain'),
+            btnStartGame: document.getElementById('btnStartGame'),
+            btnCloseHelp: document.getElementById('btnCloseHelp'),
+            setupInputs: [
+                document.getElementById('setupInput1'),
+                document.getElementById('setupInput2'),
+                document.getElementById('setupInput3'),
+                document.getElementById('setupInput4')
+            ],
+            setupError: document.getElementById('setupError')
+        };
+
+        // 生成随机四位数字（1-9）
+        function generateSecretNumber() {
+            let result = '';
+            for (let i = 0; i < 4; i++) {
+                result += Math.floor(Math.random() * 9) + 1;
+            }
+            return result;
+        }
+
+        // 计算猜中数量
+        function calculateHits(guess, secret) {
+            let hits = 0;
+            for (let i = 0; i < 4; i++) {
+                if (guess[i] === secret[i]) {
+                    hits++;
+                }
+            }
+            return hits;
+        }
+
+        // 生成所有可能的四位数字组合
+        function generateAllPossibleNumbers() {
+            const numbers = [];
+            for (let a = 1; a <= 9; a++) {
+                for (let b = 1; b <= 9; b++) {
+                    for (let c = 1; c <= 9; c++) {
+                        for (let d = 1; d <= 9; d++) {
+                            numbers.push(`${a}${b}${c}${d}`);
+                        }
+                    }
+                }
+            }
+            return numbers;
+        }
+
+        // 电脑智能猜测（基于约束过滤）
+        // 核心思想：一个有效的候选数字，必须与所有历史猜测的命中数一致
+        // 即：如果数字X是正确答案，那么用之前的猜测去猜X，应该得到相同的命中数
+        function computerGuess() {
+            // 初始化可能的数字集合
+            if (gameState.computerPossibleNumbers.length === 0) {
+                gameState.computerPossibleNumbers = generateAllPossibleNumbers();
+            }
+
+            // 基于约束过滤可能的数字
+            // 每个候选数字必须满足：对所有历史猜测，计算出的命中数与实际命中数一致
+            let possibleNumbers = gameState.computerPossibleNumbers.filter(num => {
+                for (const guessInfo of gameState.computerGuesses) {
+                    // 如果num是正确答案，那么用guessInfo.guess去猜num，命中数应该等于guessInfo.hits
+                    if (calculateHits(guessInfo.guess, num) !== guessInfo.hits) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            // 更新可能的数字集合
+            gameState.computerPossibleNumbers = possibleNumbers;
+
+            // 从可能的数字中选择一个
+            if (possibleNumbers.length > 0) {
+                return possibleNumbers[Math.floor(Math.random() * possibleNumbers.length)];
+            }
+
+            // 如果没有可能的数字（不应该发生），返回随机数字
+            return generateSecretNumber();
+        }
+
+        // 添加历史记录
+        function addHistory(player, round, guess, hits, isCorrect = false) {
+            const historyContainer = player === 'A' ? elements.historyA : elements.historyB;
+            const itemClass = player === 'A' ? 'player-a' : 'player-b';
+            const correctClass = isCorrect ? 'correct' : '';
+
+            const item = document.createElement('div');
+            item.className = `history-item ${itemClass} ${correctClass}`;
+            item.innerHTML = `
+                <div class="round">第 ${round} 轮</div>
+                <div class="guess">${guess}</div>
+                <div class="result">猜中 <span>${hits}</span> 个</div>
+            `;
+
+            // 清除提示文字
+            const hint = historyContainer.querySelector('.hint');
+            if (hint) {
+                hint.remove();
+            }
+
+            historyContainer.appendChild(item);
+            historyContainer.scrollTop = historyContainer.scrollHeight;
+        }
+
+        // 显示设置模态框
+        function showSetupModal() {
+            // 清空设置输入框
+            elements.setupInputs.forEach(input => input.value = '');
+            elements.setupError.textContent = '';
+            elements.btnStartGame.disabled = true;
+            elements.modalSetup.classList.add('active');
+            elements.setupInputs[0].focus();
+        }
+
+        // 验证设置输入
+        function validateSetupInput(index, value) {
+            // 只允许1-9
+            if (value && !/^[1-9]$/.test(value)) {
+                elements.setupInputs[index].value = '';
+                return;
+            }
+
+            // 自动跳到下一个输入框
+            if (value && index < 3) {
+                elements.setupInputs[index + 1].focus();
+            }
+
+            // 检查是否填满4位
+            const secret = elements.setupInputs.map(input => input.value).join('');
+            elements.btnStartGame.disabled = secret.length !== 4;
+            elements.setupError.textContent = '';
+        }
+
+        // 开始新游戏（使用玩家设置的数字）
+        function startNewGame() {
+            // 获取玩家设置的数字
+            const playerSecret = elements.setupInputs.map(input => input.value).join('');
+            
+            // 验证
+            if (!/^[1-9]{4}$/.test(playerSecret)) {
+                elements.setupError.textContent = '请输入4位有效数字（每位1-9）';
+                return;
+            }
+
+            // 关闭设置模态框
+            elements.modalSetup.classList.remove('active');
+
+            // 重置游戏状态
+            gameState.isPlaying = true;
+            gameState.playerSecret = playerSecret;
+            gameState.computerSecret = generateSecretNumber();
+            gameState.currentRound = 1;
+            gameState.currentTurn = 'A';
+            gameState.playerGuesses = [];
+            gameState.computerGuesses = [];
+            gameState.computerPossibleNumbers = generateAllPossibleNumbers();
+            gameState.gameWinner = null;
+
+            // 显示玩家设置的数字
+            elements.playerSecretDisplay.textContent = playerSecret;
+            elements.playerSecretDisplay.style.display = 'inline-block';
+
+            // 清空历史记录
+            elements.historyA.innerHTML = '<div class="hint">等待您的猜测...</div>';
+            elements.historyB.innerHTML = '<div class="hint">等待电脑猜测...</div>';
+
+            // 更新UI
+            elements.gameStatus.textContent = `游戏进行中 - 第 ${gameState.currentRound} 轮`;
+            elements.btnShowCard.disabled = false;
+
+            // 启用输入框
+            elements.inputs.forEach(input => {
+                input.disabled = false;
+                input.value = '';
+            });
+            elements.inputs[0].focus();
+
+            // 更新回合指示
+            updateTurnIndicator();
+
+            console.log('游戏开始！');
+            console.log('玩家数字:', gameState.playerSecret);
+            console.log('电脑数字:', gameState.computerSecret);
+        }
+
+        // 更新回合指示
+        function updateTurnIndicator() {
+            elements.turnA.style.display = gameState.currentTurn === 'A' ? 'inline-block' : 'none';
+            elements.turnB.style.display = gameState.currentTurn === 'B' ? 'inline-block' : 'none';
+        }
+
+        // 处理玩家猜测
+        function handlePlayerGuess(guess) {
+            const hits = calculateHits(guess, gameState.computerSecret);
+            gameState.playerGuesses.push({ guess, hits });
+
+            addHistory('A', gameState.currentRound, guess, hits, hits === 4);
+
+            if (hits === 4) {
+                endGame('A');
+                return;
+            }
+
+            // 切换到电脑回合
+            gameState.currentTurn = 'B';
+            updateTurnIndicator();
+            elements.gameStatus.textContent = `电脑思考中...`;
+
+            // 禁用输入框
+            elements.inputs.forEach(input => input.disabled = true);
+
+            // 延迟执行电脑猜测
+            setTimeout(() => {
+                handleComputerGuess();
+            }, 1000);
+        }
+
+        // 处理电脑猜测
+        function handleComputerGuess() {
+            const guess = computerGuess();
+            const hits = calculateHits(guess, gameState.playerSecret);
+            gameState.computerGuesses.push({ guess, hits });
+
+            addHistory('B', gameState.currentRound, guess, hits, hits === 4);
+
+            if (hits === 4) {
+                endGame('B');
+                return;
+            }
+
+            // 进入下一轮
+            gameState.currentRound++;
+            gameState.currentTurn = 'A';
+            updateTurnIndicator();
+            elements.gameStatus.textContent = `游戏进行中 - 第 ${gameState.currentRound} 轮`;
+
+            // 启用输入框
+            elements.inputs.forEach(input => input.disabled = false);
+            elements.inputs[0].focus();
+        }
+
+        // 游戏结束
+        function endGame(winner, isCheating = false) {
+            gameState.isPlaying = false;
+            gameState.gameWinner = winner;
+
+            // 禁用输入框和按钮
+            elements.inputs.forEach(input => input.disabled = true);
+            elements.btnShowCard.disabled = true;
+
+            // 更新回合指示
+            elements.turnA.style.display = 'none';
+            elements.turnB.style.display = 'none';
+
+            // 显示游戏结束模态框
+            if (winner === 'A') {
+                elements.winnerText.textContent = '🎉 恭喜您获胜！';
+                elements.winnerText.className = 'winner';
+            } else {
+                if (isCheating) {
+                    elements.winnerText.textContent = '🤖 电脑获胜！（您看牌作弊）';
+                } else {
+                    elements.winnerText.textContent = '🤖 电脑获胜！';
+                }
+                elements.winnerText.className = 'winner computer-wins';
+            }
+            elements.gameOverInfo.textContent = `游戏共进行了 ${gameState.currentRound} 轮`;
+            elements.modalGameOver.classList.add('active');
+
+            elements.gameStatus.textContent = winner === 'A' ? '您获胜了！' : '电脑获胜了！';
+        }
+
+        // 显示看牌模态框
+        function showCardModal() {
+            elements.modalSecretNumber.textContent = gameState.computerSecret;
+            elements.modalShowCard.classList.add('active');
+            
+            // 看牌后游戏结束，玩家作弊，电脑获胜
+            setTimeout(() => {
+                elements.modalShowCard.classList.remove('active');
+                endGame('B', true);  // true 表示是因为看牌而结束
+            }, 1500);
+        }
+
+        // 关闭模态框
+        function closeModals() {
+            elements.modalShowCard.classList.remove('active');
+            elements.modalGameOver.classList.remove('active');
+            elements.modalHelp.classList.remove('active');
+        }
+
+        // 显示帮助模态框
+        function showHelpModal() {
+            elements.modalHelp.classList.add('active');
+        }
+
+        // 输入框处理
+        function handleInput(index, value) {
+            // 只允许1-9
+            if (value && !/^[1-9]$/.test(value)) {
+                elements.inputs[index].value = '';
+                return;
+            }
+
+            // 自动跳到下一个输入框
+            if (value && index < 3) {
+                elements.inputs[index + 1].focus();
+            }
+
+            // 检查是否填满4位
+            checkAndSubmit();
+        }
+
+        // 检查并提交猜测
+        function checkAndSubmit() {
+            const guess = elements.inputs.map(input => input.value).join('');
+            if (guess.length === 4 && /^[1-9]{4}$/.test(guess)) {
+                // 清空输入框
+                elements.inputs.forEach(input => input.value = '');
+                handlePlayerGuess(guess);
+            }
+        }
+
+        // 事件绑定
+        elements.btnNewGame.addEventListener('click', showSetupModal);
+        elements.btnShowCard.addEventListener('click', showCardModal);
+        elements.btnHelp.addEventListener('click', showHelpModal);
+        elements.btnCloseModal.addEventListener('click', closeModals);
+        elements.btnCloseHelp.addEventListener('click', closeModals);
+        elements.btnStartGame.addEventListener('click', startNewGame);
+        elements.btnPlayAgain.addEventListener('click', () => {
+            closeModals();
+            showSetupModal();
+        });
+
+        // 输入框事件
+        elements.inputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                handleInput(index, e.target.value);
+            });
+
+            input.addEventListener('keydown', (e) => {
+                // 退格键处理
+                if (e.key === 'Backspace' && !input.value && index > 0) {
+                    elements.inputs[index - 1].focus();
+                }
+                // 回车键提交
+                if (e.key === 'Enter') {
+                    checkAndSubmit();
+                }
+            });
+
+            // 粘贴处理
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pastedData = (e.clipboardData || window.clipboardData).getData('text');
+                if (/^[1-9]{4}$/.test(pastedData)) {
+                    elements.inputs.forEach((inp, i) => {
+                        inp.value = pastedData[i];
+                    });
+                    checkAndSubmit();
+                }
+            });
+        });
+
+        // 设置输入框事件
+        elements.setupInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                validateSetupInput(index, e.target.value);
+            });
+
+            input.addEventListener('keydown', (e) => {
+                // 退格键处理
+                if (e.key === 'Backspace' && !input.value && index > 0) {
+                    elements.setupInputs[index - 1].focus();
+                }
+                // 回车键提交
+                if (e.key === 'Enter' && !elements.btnStartGame.disabled) {
+                    startNewGame();
+                }
+            });
+
+            // 粘贴处理
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pastedData = (e.clipboardData || window.clipboardData).getData('text');
+                if (/^[1-9]{4}$/.test(pastedData)) {
+                    elements.setupInputs.forEach((inp, i) => {
+                        inp.value = pastedData[i];
+                    });
+                    elements.btnStartGame.disabled = false;
+                }
+            });
+        });
+
+        // 点击模态框外部关闭
+        elements.modalShowCard.addEventListener('click', (e) => {
+            if (e.target === elements.modalShowCard) {
+                closeModals();
+            }
+        });
+
+        elements.modalGameOver.addEventListener('click', (e) => {
+            if (e.target === elements.modalGameOver) {
+                closeModals();
+            }
+        });
+
+        elements.modalSetup.addEventListener('click', (e) => {
+            if (e.target === elements.modalSetup) {
+                elements.modalSetup.classList.remove('active');
+            }
+        });
+
+        elements.modalHelp.addEventListener('click', (e) => {
+            if (e.target === elements.modalHelp) {
+                closeModals();
+            }
+        });
+    </script>
+</body>
+</html>
