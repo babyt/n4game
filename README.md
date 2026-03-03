@@ -4,9 +4,12 @@
 <h2>游戏流程</h2>
 点击"开新局"按钮开始新游戏<br>
 玩家A输入一个4位数字（每位1-9）作为电脑需要猜测的目标<br>
-电脑也会随机生成一个4位数字作为玩家A需要猜测的目标<br>
-玩家A和电脑B轮流猜测对方的数字v
+电脑也会随机生成一个4位数字，作为玩家A需要猜测的目标<br>
+玩家A和电脑B轮流猜测对方的数字<br>
 每次猜测后会显示猜中了几个数字（位置和数字都正确）<br>
 先猜中全部4个数字的一方获胜<br>
 
 <img width="2096" height="1859" alt="image" src="https://github.com/user-attachments/assets/92713b8d-daf9-44be-870a-01b05711ab31" />
+
+<img width="2088" height="1850" alt="image" src="https://github.com/user-attachments/assets/e491e95a-3a93-4560-9059-9dfe8204eebe" />
+
